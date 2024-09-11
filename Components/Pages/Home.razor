@@ -1,7 +1,67 @@
 ﻿@page "/"
+@inject GamesClient Client;
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Game Catalog</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="container mt-3">
+    <a class="btn btn-primary" role="button" href="/editgame">New Game</a>
+</div>
+@if (_games is null)
+{
+    <p><em>Loading....</em></p>
+}
+else
+{
+    <div class="container">
+        <table class="table table-stripped table-bordered table-hover mt-3 ">
+            <thead class="table-dark">
+            <th>Id</th>
+            <th>Name</th>
+            <th>Genre</th>
+            <th class="text-end">Price</th>
+            <th>ReleaseDate</th>
+            <th></th>
+            </thead>
+            <tbody>
+            @foreach (var game in _games)
+            {
+                <tr>
+                    <td>@game.Id</td>
+                    <td>@game.Name</td>
+                    <td>@game.Genre</td>
+                    <td class="text-end ">@game.Price.ToString("C2")</td>
+                    <td>@game.ReleaseDate</td>
+                    <td>
+                        <div class="d-flex">
+                            <a class="btn btn-primary me-2" role="button" href="@GetGameUrl(game.Id)">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="@GetDeleteModalId(game)">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                            
+                        </div>
+                        <DeleteGame Game="@game"></DeleteGame>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+@code {
 
-Welcome to your new app ma man.
+  
+    private GameSummary[]? _games;
+
+    protected override void OnInitialized()
+    {
+        _games = Client.GetGames();
+    }
+
+    private static string GetGameUrl(int id) => $"/editgame/{id}";
+
+    private string GetDeleteModalId(GameSummary game) {
+        return $"#{DeleteGame.GetModalId(game)}";
+    }
+}

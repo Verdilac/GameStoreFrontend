@@ -1,0 +1,112 @@
+@page "/editgame"
+@page "/editgame/{id:int}"
+@rendermode InteractiveServer
+@inject NavigationManager  NavigationManager
+@inject GamesClient GamesClient
+@inject  GenresClient GenresClient
+
+
+<PageTitle>@_title</PageTitle>
+
+
+    
+    @if (_genres is null || game is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    { 
+        <div class="lowpad-container">
+            <h3>@_title</h3>
+            <div class="row">
+                <div class="col-md-3">
+                    <EditForm Model="@game" FormName="editGame" OnValidSubmit="HandleEditGameFormSubmit">
+                        <DataAnnotationsValidator/>
+                        <ValidationSummary/>
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name:</label>
+                            <InputText id="name" @bind-Value="game.Name" class="form-control"/>
+                            <ValidationMessage For="() => game.Name"/>
+                        </div>
+                        <div class="mb-3">
+                            <label for="genre" class="form-label">Genre:</label>
+                            <InputSelect id="genre" @bind-Value="game.GenreId" class="form-select">
+                                <option value="">Select a genre</option>
+                                @foreach (var genre in _genres) {
+                                    <option value="@genre.Id">@genre.Name</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="() => game.GenreId"/>
+                        </div>
+                        <div class="mb-3">
+                            <label for="price" class="form-label">Price:</label>
+                            <InputNumber id="price" @bind-Value="game.Price" class="form-control"/>
+                            <ValidationMessage For="() => game.Price"/>
+                        </div>
+                        <div class="mb-3">
+                            <label for="releaseDate" class="form-label">ReleaseDate:</label>
+                            <InputDate id="releaseDate" @bind-Value="game.ReleaseDate" class="form-control"/>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                        <a role="button" class="btn btn-secondary" href="/">Cancel</a>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    }
+@code {
+    
+    [Parameter]
+    public int? Id { get; set; }
+    
+    [SupplyParameterFromForm]
+    private GameDetails? game { get; set; }
+
+    private string _title = String.Empty;
+
+    protected override void OnParametersSet() {
+        /*checking if the game is null or not is important because OnParameterSet will be called upon submitting the form as well,so without this method upon submitting
+         the data will be initialized with either the initial game details for the edit or an empty game.
+        */
+        if (game is not null) {
+            return;
+        }
+        if (Id is not null) {
+            game = GamesClient.GetGame(Id.Value);
+            _title = $"Change {game.Name}";
+        } 
+        else {
+            game = new() {
+                Name = string.Empty,
+                ReleaseDate = DateOnly.FromDateTime(DateTime.UtcNow)
+            };
+            _title = "New Game";
+        }
+    }
+
+
+    private Genre[]? _genres;
+    protected override void OnInitialized()
+    {
+        _genres = GenresClient.GetGenres();
+    }
+    
+
+
+    
+
+    private void HandleEditGameFormSubmit() {
+        ArgumentNullException.ThrowIfNull(game);
+
+        if (Id is null) {
+            GamesClient.AddGame(game);
+        } 
+        else {
+            game.Id = Id.Value;
+            GamesClient.UpdateGame(game);
+        }
+      
+        NavigationManager.NavigateTo("/");
+    }
+
+}
