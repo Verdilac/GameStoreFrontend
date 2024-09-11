@@ -1,5 +1,8 @@
 ﻿@page "/"
 @inject GamesClient Client;
+@attribute [StreamRendering] 
+
+@* Making Use of Stream Rendering so the user is able to view the page untill the api gets back with data*@
 
 <PageTitle>Game Catalog</PageTitle>
 
@@ -54,9 +57,9 @@ else
   
     private GameSummary[]? _games;
 
-    protected override void OnInitialized()
+    protected override async Task  OnInitializedAsync()
     {
-        _games = Client.GetGames();
+        _games = await Client.GetGamesAsync();
     }
 
     private static string GetGameUrl(int id) => $"/editgame/{id}";

@@ -20,7 +20,7 @@
             <h3>@_title</h3>
             <div class="row">
                 <div class="col-md-3">
-                    <EditForm Model="@game" FormName="editGame" OnValidSubmit="HandleEditGameFormSubmit">
+                    <EditForm Model="@game" FormName="editGame" OnValidSubmit="HandleEditGameFormSubmitAsync" Enhance >
                         <DataAnnotationsValidator/>
                         <ValidationSummary/>
                         <div class="mb-3">
@@ -63,8 +63,10 @@
     private GameDetails? game { get; set; }
 
     private string _title = String.Empty;
+    
+    private Genre[]? _genres;
 
-    protected override void OnParametersSet() {
+    protected override async Task OnParametersSetAsync() {
         /*checking if the game is null or not is important because OnParameterSet will be called upon submitting the form as well,so without this method upon submitting
          the data will be initialized with either the initial game details for the edit or an empty game.
         */
@@ -72,7 +74,7 @@
             return;
         }
         if (Id is not null) {
-            game = GamesClient.GetGame(Id.Value);
+            game = await GamesClient.GetGameAsync(Id.Value);
             _title = $"Change {game.Name}";
         } 
         else {
@@ -85,25 +87,25 @@
     }
 
 
-    private Genre[]? _genres;
-    protected override void OnInitialized()
+
+    protected override async Task OnInitializedAsync()
     {
-        _genres = GenresClient.GetGenres();
+        _genres = await GenresClient.GetGenresAsync();
     }
     
 
 
     
 
-    private void HandleEditGameFormSubmit() {
+    private async Task  HandleEditGameFormSubmitAsync() {
         ArgumentNullException.ThrowIfNull(game);
 
         if (Id is null) {
-            GamesClient.AddGame(game);
+            await GamesClient.AddGameAsync(game);
         } 
         else {
             game.Id = Id.Value;
-            GamesClient.UpdateGame(game);
+            await GamesClient.UpdateGameAsync(game);
         }
       
         NavigationManager.NavigateTo("/");

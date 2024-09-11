@@ -1,12 +1,19 @@
 using GameStore.Frontend.Clients;
 using GameStore.Frontend.Components;
+using GameStore.Frontend.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
-builder.Services.AddSingleton<GamesClient>();
-builder.Services.AddSingleton<GenresClient>();
+
+var gameStoreAPIURL = builder.Configuration["GameStoreAPIURL"] ?? throw new Exception("GameStore API URL is Not Set!");
+
+//Registering Both Clients and their respective HTTP Clients 
+builder.Services.AddHttpClient<GamesClient>(client => client.BaseAddress = new Uri(gameStoreAPIURL));
+builder.Services.AddHttpClient<GenresClient>(client => client.BaseAddress = new Uri(gameStoreAPIURL));
+
+
 var app = builder.Build();
 
 
